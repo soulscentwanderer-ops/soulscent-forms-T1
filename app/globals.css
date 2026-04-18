@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'SweiSpring';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/swei-spring@1.068/WebFont/CJK%20TC/SweiSpringCJKtc-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SweiSpring';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/swei-spring@1.068/WebFont/CJK%20TC/SweiSpringCJKtc-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --cream: #ddd3cc;
+  --moss: #484e2e;
+  --sand: #bfb792;
+  --umber: #473618;
+  --sage: #a9b3a8;
+  --khaki: #84805b;
+  --t1: #9fa38a;
+  --t1-light: #f0f1ec;
+  --page-bg: #faf8f6;
+  --body-bg: #f0ebe4;
+
+  --font-chinese: 'SweiSpring', 'Noto Serif TC', serif;
+  --font-display: 'Playfair Display', serif;
+  --font-ui: 'DM Sans', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--body-bg);
+  font-family: var(--font-chinese);
+  color: var(--umber);
+}
+
+input[type='text'],
+input[type='date'],
+textarea,
+select {
+  width: 100%;
+  border: none;
+  border-bottom: 0.5px solid var(--khaki);
+  background: transparent;
+  font-family: var(--font-chinese);
+  font-size: 13px;
+  color: var(--umber);
+  padding: 4px 2px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type='text']:focus,
+input[type='date']:focus,
+textarea:focus,
+select:focus {
+  border-bottom-color: var(--t1);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 40px;
+  border: 0.5px solid rgba(168, 179, 168, 0.4);
+  padding: 6px 8px;
+  margin-top: 4px;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--t1);
+}
