@@ -176,8 +176,18 @@ function CuratorContent() {
   useEffect(() => {
     fetch('/api/notion-sessions')
       .then(r => r.json())
-      .then(d => setSessions(d.sessions ?? []))
-      .catch(() => {})
+      .then(d => {
+        if (d.error) {
+          console.error('[notion-sessions]', d.error, d.detail)
+          setError(`讀取紀錄清單失敗：${d.error}${d.status ? ` (${d.status})` : ''}`)
+        } else {
+          setSessions(d.sessions ?? [])
+        }
+      })
+      .catch(e => {
+        console.error('[notion-sessions] fetch error:', e)
+        setError('無法連線，請確認網路後重整頁面')
+      })
       .finally(() => setSessionsLoading(false))
   }, [])
 
