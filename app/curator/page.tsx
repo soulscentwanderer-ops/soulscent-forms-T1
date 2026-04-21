@@ -557,8 +557,13 @@ function CuratorContent() {
 
       <style jsx global>{`
         @media print {
-          body { background: none !important; padding: 0 !important; }
+          body { background: none !important; padding: 0 !important; margin: 0 !important; }
           .no-print { display: none !important; }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
         }
         @media (max-width: 640px) {
           .body-grid { grid-template-columns: 1fr !important; }
