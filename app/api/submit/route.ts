@@ -12,10 +12,9 @@ export async function POST(req: NextRequest) {
         title: [{ text: { content: `${safe(name)} · T1 香遇 · ${safe(date)}` } }],
       },
       '諮詢日期': {
-        date: { start: date || new Date().toISOString().split('T')[0] },
+        rich_text: [{ text: { content: date || new Date().toISOString().split('T')[0] } }],
       },
       '服務層': { select: { name: 'T1 香遇' } },
-      '場地': { select: { name: 'Gasa Space' } },
       '進來前狀態': { rich_text: [{ text: { content: safe(before) } }] },
       '結束後狀態': { rich_text: [{ text: { content: safe(after) } }] },
       '最終配方說明': { rich_text: [{ text: { content: safe(oils) } }] },
@@ -35,6 +34,7 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok) {
     const err = await res.json()
+    console.error('Notion API error:', JSON.stringify(err, null, 2))
     return NextResponse.json({ error: err }, { status: 500 })
   }
 

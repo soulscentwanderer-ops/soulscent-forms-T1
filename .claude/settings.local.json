@@ -1,11 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app@14 . --typescript --tailwind --app --no-eslint --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@14 *)",
       "Bash(npm init *)",
       "Bash(npm install *)",
       "Bash(npm run *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(open -a *)",
+      "Bash(open /Users/yichunchen/Desktop/soulscent-forms/.env.local)",
+      "Bash(curl -s -X POST https://api.notion.com/v1/pages *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s https://api.notion.com/v1/databases/* )",
+      "Bash(python3 -c *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(bash scripts/bundle-artifact.sh *)",
+      "Bash(bash ../scripts/bundle-artifact.sh)"
     ]
   }
 }

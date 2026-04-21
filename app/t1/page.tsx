@@ -132,7 +132,7 @@ export default function T1Page() {
   const submitted = status === 'success'
 
   return (
-    <div style={{ background: 'var(--body-bg)', padding: '1.5rem', minHeight: '100vh' }}>
+    <div style={{ padding: '1.5rem', minHeight: '100vh' }}>
       <div className="page-card" style={{
         width: '100%',
         maxWidth: '820px',
@@ -170,8 +170,7 @@ export default function T1Page() {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '13px', letterSpacing: '0.1em', color: 'var(--moss)' }}>SOULSCENT 嗅嗅</div>
-            <div style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '9px', letterSpacing: '0.1em', color: 'var(--khaki)', textTransform: 'uppercase', marginTop: '3px' }}>Scent Curation</div>
+            <img src="/Logo.png" alt="SOULSCENT 嗅嗅" style={{ height: '56px', width: 'auto', opacity: 0.85 }} />
           </div>
         </div>
 
@@ -208,7 +207,7 @@ export default function T1Page() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 56px 2fr 2fr', gap: '8px', paddingBottom: '6px', borderBottom: '0.5px solid var(--khaki)' }}>
-            {['精油名稱', '濃度 %', '身體的感受', '情緒的感受'].map(label => (
+            {['精油名稱', '滴數', '身體的感受', '情緒的感受'].map(label => (
               <span key={label} style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sage)' }}>{label}</span>
             ))}
           </div>
@@ -216,7 +215,7 @@ export default function T1Page() {
           {oils.map((row, idx) => (
             <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 56px 2fr 2fr', gap: '8px', padding: '6px 0', borderBottom: '0.5px dashed rgba(168,179,168,.35)', alignItems: 'center' }}>
               <input type="text" value={row.name} onChange={e => updateOil(idx, 'name', e.target.value)} placeholder={idx === 0 ? '精油名稱' : ''} />
-              <input type="text" value={row.conc} onChange={e => updateOil(idx, 'conc', e.target.value)} placeholder={idx === 0 ? '%' : ''} />
+              <input type="text" value={row.conc} onChange={e => updateOil(idx, 'conc', e.target.value)} placeholder={idx === 0 ? '滴' : ''} />
               <input type="text" value={row.body} onChange={e => updateOil(idx, 'body', e.target.value)} placeholder={idx === 0 ? '身體感受' : ''} />
               <input type="text" value={row.emotion} onChange={e => updateOil(idx, 'emotion', e.target.value)} placeholder={idx === 0 ? '情緒感受' : ''} />
             </div>
@@ -470,7 +469,7 @@ export default function T1Page() {
 
             {status === 'success' && (
               <span style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '11px', padding: '8px 14px', background: '#e8f0e8', color: '#2d5a2d', border: '0.5px solid #6a9f6a', borderRadius: '2px' }}>
-                ✓ 已送出！感謝你今天的到來，策展師將在 24 小時內回應你的紀錄。
+                ✓ 已送出！
               </span>
             )}
             {status === 'error' && (

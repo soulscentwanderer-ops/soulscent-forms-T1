@@ -16,18 +16,19 @@
 }
 
 :root {
-  --cream: #ddd3cc;
-  --moss: #484e2e;
-  --sand: #bfb792;
-  --umber: #473618;
-  --sage: #a9b3a8;
-  --khaki: #84805b;
-  --t1: #9fa38a;
+  /* 依照 2026 Atmospheric Color System 更新 */
+  --cream: #ede8e2;       /* Cream Fog 奶霧白（原 #ddd3cc）*/
+  --moss: #484e2e;        /* Dark Moss 暗苔綠 */
+  --sand: #bfb792;        /* Sand Gold 沙金 */
+  --umber: #473618;       /* Dark Umber 深棕黑 */
+  --sage: #a9b3a8;        /* Mist Sage 霧藍綠 */
+  --khaki: #84805b;       /* Warm Khaki */
+  --t1: #9fa38a;          /* Sage Haze T1識別色 */
   --t1-light: #f0f1ec;
-  --page-bg: #faf8f6;
-  --body-bg: #f0ebe4;
+  --page-bg: #f5f0eb;     /* Pure Mist 純霧（原 #faf8f6）*/
+  --body-bg: #ede8e2;     /* Cream Fog */
 
-  --font-chinese: 'SweiSpring', 'Noto Serif TC', serif;
+  --font-chinese: 'SweiSpring', serif;
   --font-display: 'Playfair Display', serif;
   --font-ui: 'DM Sans', sans-serif;
 }
@@ -39,7 +40,13 @@
 }
 
 body {
-  background: var(--body-bg);
+  /* Morning Fog 大氣漸層背景 */
+  background:
+    radial-gradient(ellipse 70% 55% at 20% 30%, rgba(159,163,138,0.40) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 65% at 78% 68%, rgba(148,76,66,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 55% 15%, rgba(191,183,146,0.30) 0%, transparent 55%),
+    #ede8e2;
+  background-attachment: fixed;
   font-family: var(--font-chinese);
   color: var(--umber);
 }
