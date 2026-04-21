@@ -203,7 +203,11 @@ function CuratorContent() {
     setRituals(DEFAULT_RITUALS)
     try {
       const r = await fetch(`/api/notion-session?name=${encodeURIComponent(name)}&date=${encodeURIComponent(date)}`)
-      if (!r.ok) { const e = await r.json(); throw new Error(e.error) }
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}))
+        const msg = typeof e.error === 'string' ? e.error : JSON.stringify(e)
+        throw new Error(msg)
+      }
       const session = await r.json()
       setClientName(session.name)
       setClientDate(session.date)

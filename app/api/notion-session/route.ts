@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: '缺少 name 或 date 參數' }, { status: 400 })
   }
 
+  // Filter only by date — avoids select-property filter issues
   const res = await fetch(
     `https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`,
     {
@@ -19,19 +20,17 @@ export async function GET(req: NextRequest) {
         'Notion-Version': '2022-06-28',
       },
       body: JSON.stringify({
-        filter: {
-          and: [
-            { property: '諮詢日期', date: { equals: date } },
-            { property: '服務層', select: { equals: 'T1 香遇' } },
-          ],
-        },
+        filter: { property: '諮詢日期', date: { equals: date } },
+        page_size: 20,
       }),
     }
   )
 
   if (!res.ok) {
-    const err = await res.json()
-    return NextResponse.json({ error: err }, { status: 500 })
+    const err = await res.json().catch(() => ({}))
+    const msg = err?.message || err?.code || JSON.stringify(err)
+    console.error('[notion-session] Notion error:', res.status, msg)
+    return NextResponse.json({ error: `Notion API 錯誤 (${res.status}): ${msg}` }, { status: 500 })
   }
 
   const data = await res.json()
@@ -40,11 +39,11 @@ export async function GET(req: NextRequest) {
     const props = page.properties as Record<string, unknown>
     const titleArr = (props['諮詢名稱'] as { title: Array<{ text: { content: string } }> })?.title
     const title = titleArr?.[0]?.text?.content || ''
-    return title.startsWith(name + ' ·') || title.startsWith(name + '·')
+    return title.startsWith(name + ' ·') || title.startsWith(name + '·') || title.includes(name)
   })
 
   if (!record) {
-    return NextResponse.json({ error: '找不到對應的紀錄' }, { status: 404 })
+    return NextResponse.json({ error: `找不到 ${name} 在 ${date} 的紀錄` }, { status: 404 })
   }
 
   const props = record.properties as Record<string, unknown>
