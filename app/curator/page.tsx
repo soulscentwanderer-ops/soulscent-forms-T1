@@ -353,7 +353,7 @@ function CuratorContent() {
 
       {error && (
         <div className="no-print" style={{ width: '794px', maxWidth: '100%', marginBottom: '12px', padding: '10px 16px', background: '#f8eded', border: '0.5px solid #c8a0a0', fontFamily: V.fontUi, fontSize: '11px', color: '#5a2d2d' }}>
-          {error} — 請確認 Notion 中有該筆紀錄
+          {error}
         </div>
       )}
 
