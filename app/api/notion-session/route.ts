@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: '缺少 name 或 date 參數' }, { status: 400 })
   }
 
-  // Filter only by date — avoids select-property filter issues
+  // No property filter — avoids type mismatch errors (諮詢日期 is text not date).
+  // We query all records and match by title client-side.
   const res = await fetch(
     `https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`,
     {
@@ -20,8 +21,8 @@ export async function GET(req: NextRequest) {
         'Notion-Version': '2022-06-28',
       },
       body: JSON.stringify({
-        filter: { property: '諮詢日期', date: { equals: date } },
-        page_size: 20,
+        sorts: [{ timestamp: 'created_time', direction: 'descending' }],
+        page_size: 100,
       }),
     }
   )
@@ -39,7 +40,9 @@ export async function GET(req: NextRequest) {
     const props = page.properties as Record<string, unknown>
     const titleArr = (props['諮詢名稱'] as { title: Array<{ text: { content: string } }> })?.title
     const title = titleArr?.[0]?.text?.content || ''
-    return title.startsWith(name + ' ·') || title.startsWith(name + '·') || title.includes(name)
+    const nameMatch = title.startsWith(name + ' ·') || title.startsWith(name + '·') || title.includes(name)
+    const dateMatch = title.includes(date)
+    return nameMatch && dateMatch
   })
 
   if (!record) {
