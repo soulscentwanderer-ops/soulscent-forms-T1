@@ -139,13 +139,25 @@ const sectionPad: React.CSSProperties = { padding: '32px 40px' }
 const divider: React.CSSProperties = { height: '0.5px', background: 'rgba(191,183,146,0.35)' }
 const bodyGrad = 'radial-gradient(ellipse 70% 55% at 20% 30%,rgba(159,163,138,.40) 0%,transparent 65%),radial-gradient(ellipse 55% 65% at 78% 68%,rgba(148,76,66,.22) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 55% 15%,rgba(191,183,146,.30) 0%,transparent 55%)'
 
+// ─── Types (session list) ─────────────────────────────────────────────────────
+interface SessionItem { name: string; date: string; label: string }
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 function CuratorContent() {
   const searchParams = useSearchParams()
   const urlName = searchParams.get('name') || ''
   const urlDate = searchParams.get('date') || ''
 
-  const [loading, setLoading] = useState(!!urlName && !!urlDate)
+  // Session list (picker)
+  const [sessions, setSessions] = useState<SessionItem[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(true)
+  const [selectedKey, setSelectedKey] = useState(
+    urlName && urlDate ? `${urlName}__${urlDate}` : ''
+  )
+
+  // Session data
+  const [sessionLoading, setSessionLoading] = useState(false)
+  const [sessionLoaded, setSessionLoaded] = useState(false)
   const [error, setError] = useState('')
   const [clientName, setClientName] = useState(urlName)
   const [clientDate, setClientDate] = useState(urlDate)
@@ -160,21 +172,55 @@ function CuratorContent() {
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState(false)
 
+  // Fetch session list on mount
   useEffect(() => {
-    if (!urlName || !urlDate) { setLoading(false); return }
-    fetch(`/api/notion-session?name=${encodeURIComponent(urlName)}&date=${encodeURIComponent(urlDate)}`)
-      .then(r => r.ok ? r.json() : r.json().then((e: { error: string }) => Promise.reject(new Error(e.error))))
-      .then(session => {
-        setClientName(session.name)
-        setClientDate(session.date)
-        setOils(parseOils(session.oils))
-        setBeforeTags(buildTags(BEFORE_OPTIONS, session.before))
-        setAfterTags(buildTags(AFTER_OPTIONS, session.after))
-        setObs(parseObsText(session.observation))
-      })
-      .catch((e: Error) => setError(e.message || '載入失敗'))
-      .finally(() => setLoading(false))
+    fetch('/api/notion-sessions')
+      .then(r => r.json())
+      .then(d => setSessions(d.sessions ?? []))
+      .catch(() => {})
+      .finally(() => setSessionsLoading(false))
+  }, [])
+
+  // Load session data when selectedKey changes
+  async function loadSession(name: string, date: string) {
+    if (!name || !date) return
+    setSessionLoading(true)
+    setError('')
+    setGenerated(false)
+    setCuratorObs('')
+    setCuratorNote('')
+    setCuratorQuote('')
+    setRituals(DEFAULT_RITUALS)
+    try {
+      const r = await fetch(`/api/notion-session?name=${encodeURIComponent(name)}&date=${encodeURIComponent(date)}`)
+      if (!r.ok) { const e = await r.json(); throw new Error(e.error) }
+      const session = await r.json()
+      setClientName(session.name)
+      setClientDate(session.date)
+      setOils(parseOils(session.oils))
+      setBeforeTags(buildTags(BEFORE_OPTIONS, session.before))
+      setAfterTags(buildTags(AFTER_OPTIONS, session.after))
+      setObs(parseObsText(session.observation))
+      setSessionLoaded(true)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '載入失敗')
+    } finally {
+      setSessionLoading(false)
+    }
+  }
+
+  // Auto-load if URL params present
+  useEffect(() => {
+    if (urlName && urlDate) loadSession(urlName, urlDate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlName, urlDate])
+
+  function handlePickerChange(key: string) {
+    setSelectedKey(key)
+    if (!key) return
+    const [name, date] = key.split('__')
+    loadSession(name, date)
+  }
 
   const toggleTag = (list: TagItem[], setList: React.Dispatch<React.SetStateAction<TagItem[]>>, i: number) =>
     setList(list.map((t, idx) => idx === i ? { ...t, active: !t.active } : t))
@@ -209,7 +255,7 @@ function CuratorContent() {
     }
   }
 
-  if (loading) return (
+  if (sessionLoading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.warmKhaki, background: V.creamFog }}>
       正在讀取資料…
     </div>
@@ -227,22 +273,46 @@ function CuratorContent() {
     <div style={{ background: V.creamFog, backgroundImage: bodyGrad, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px', fontFamily: V.fontZh }}>
 
       {/* ── Toolbar ── */}
-      <div className="no-print" style={{ width: '794px', maxWidth: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '0 2px' }}>
-        <span style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki }}>
-          T1 · 香遇報告 · 策展師工作台
-        </span>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button onClick={() => window.print()} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 18px', cursor: 'pointer' }}>
-            列印 / PDF
-          </button>
-          <button onClick={handleGenerate} disabled={generating} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 18px', cursor: generating ? 'not-allowed' : 'pointer', opacity: generating ? 0.65 : 1, transition: 'opacity .2s' }}>
-            {generating ? '生成中…' : '✦ 生成策展筆記'}
-          </button>
+      <div className="no-print" style={{ width: '794px', maxWidth: '100%', marginBottom: '16px', padding: '0 2px' }}>
+        {/* Top row: label + actions */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <span style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki }}>
+            T1 · 香遇報告 · 策展師工作台
+          </span>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button onClick={() => window.print()} disabled={!sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 18px', cursor: sessionLoaded ? 'pointer' : 'not-allowed', opacity: sessionLoaded ? 1 : 0.4 }}>
+              列印 / PDF
+            </button>
+            <button onClick={handleGenerate} disabled={generating || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 18px', cursor: (generating || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (generating || !sessionLoaded) ? 0.5 : 1, transition: 'opacity .2s' }}>
+              {generating ? '生成中…' : '✦ 生成策展筆記'}
+            </button>
+          </div>
+        </div>
+
+        {/* Session picker row */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase', color: V.mistSage, whiteSpace: 'nowrap' }}>
+            選擇諮詢
+          </span>
+          <select
+            value={selectedKey}
+            onChange={e => handlePickerChange(e.target.value)}
+            style={{ flex: 1, fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, background: 'rgba(255,255,255,0.7)', border: `0.5px solid rgba(191,183,146,0.6)`, padding: '7px 10px', outline: 'none', cursor: 'pointer', appearance: 'auto' }}
+          >
+            <option value="">
+              {sessionsLoading ? '讀取中…' : sessions.length === 0 ? '（尚無紀錄）' : '請選擇一筆諮詢紀錄'}
+            </option>
+            {sessions.map(s => (
+              <option key={`${s.name}__${s.date}`} value={`${s.name}__${s.date}`}>
+                {s.date}　{s.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* ── Curator Obs Input (no-print) ── */}
-      {(urlName || urlDate) && (
+      {sessionLoaded && (
         <div className="no-print" style={{ width: '794px', maxWidth: '100%', marginBottom: '12px', padding: '14px 16px', background: 'rgba(71,54,24,0.05)', border: `0.5px solid rgba(191,183,146,0.4)` }}>
           <div style={{ fontFamily: V.fontUi, fontSize: '8px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki, marginBottom: '6px' }}>策展師私人觀察（生成策展筆記時參考，不印出）</div>
           <AutoTextarea
@@ -260,8 +330,16 @@ function CuratorContent() {
         </div>
       )}
 
+      {/* ── Empty state ── */}
+      {!sessionLoaded && !sessionLoading && (
+        <div className="no-print" style={{ width: '794px', maxWidth: '100%', padding: '60px 40px', textAlign: 'center', background: 'rgba(255,255,255,0.4)', border: `0.5px solid rgba(191,183,146,0.4)` }}>
+          <div style={{ fontFamily: V.fontDisplay, fontStyle: 'italic', fontSize: '20px', color: V.darkUmber, marginBottom: '10px' }}>選擇一筆諮詢紀錄開始</div>
+          <div style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.2em', color: V.mistSage }}>從上方選單選擇日期與客戶，資料將自動載入</div>
+        </div>
+      )}
+
       {/* ── Report Card ── */}
-      <div style={{ width: '794px', maxWidth: '100%', background: V.pureMist, position: 'relative', boxShadow: '0 4px 40px rgba(71,54,24,0.10)' }}>
+      {sessionLoaded && <div style={{ width: '794px', maxWidth: '100%', background: V.pureMist, position: 'relative', boxShadow: '0 4px 40px rgba(71,54,24,0.10)' }}>
 
         {/* Accent bar */}
         <div style={{ height: '3px', background: 'linear-gradient(to right,#9fa38a,#bfb792,transparent)' }} />
@@ -448,7 +526,7 @@ function CuratorContent() {
             @soulscent.xiuxiu
           </div>
         </div>
-      </div>
+      </div>}
 
       <style jsx global>{`
         @media print {
