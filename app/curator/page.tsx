@@ -531,13 +531,13 @@ function CuratorContent() {
               <AutoTextarea
                 value={curatorNote}
                 onChange={setCuratorNote}
-                style={{ fontFamily: V.fontDisplay, fontSize: '15px', color: '#e8e0d4', lineHeight: '2.0', marginBottom: '28px' }}
+                style={{ fontFamily: '"SweiSpring", "Noto Serif TC", serif', fontSize: '15px', color: '#e8e0d4', lineHeight: '2.2', marginBottom: '28px' }}
               />
               <div style={{ borderLeft: `2px solid ${V.sandGold}`, padding: '10px 20px' }}>
                 <AutoTextarea
                   value={`「${curatorQuote}」`}
                   onChange={v => setCuratorQuote(v.replace(/^「|」$/g, ''))}
-                  style={{ fontFamily: V.fontDisplay, fontStyle: 'italic', fontSize: '19px', color: '#f0e8d8', lineHeight: '1.6' }}
+                  style={{ fontFamily: '"SweiSpring", "Noto Serif TC", serif', fontSize: '19px', color: '#f0e8d8', lineHeight: '1.8' }}
                 />
               </div>
             </>

@@ -29,6 +29,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-TW" className={`${playfairDisplay.variable} ${dmSans.variable}`}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/max32002/swei-spring@2.026/css/swei-spring-cjk-subset.css"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>{children}</body>
     </html>
   )
