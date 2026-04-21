@@ -475,11 +475,11 @@ export default function T1Page() {
           </div>
 
           {status === 'success' && (() => {
-            const reportUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/report?name=${encodeURIComponent(name.trim())}&date=${encodeURIComponent(date)}`
+            const reportUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/curator?name=${encodeURIComponent(name.trim())}&date=${encodeURIComponent(date)}`
             return (
               <div style={{ marginTop: '20px', padding: '16px', border: '0.5px solid var(--t1)', background: 'rgba(159,163,138,.06)' }}>
                 <div style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--t1)', marginBottom: '8px' }}>
-                  香遇報告連結 · 可傳給客戶
+                  開啟策展師工作台 · 生成報告後輸出 PDF
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <code style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--umber)', background: 'rgba(191,183,146,.15)', padding: '5px 8px', flex: 1, wordBreak: 'break-all' }}>
