@@ -148,6 +148,9 @@ function CuratorContent() {
   const urlName = searchParams.get('name') || ''
   const urlDate = searchParams.get('date') || ''
 
+  const [copied, setCopied] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
+
   // Session list (picker)
   const [sessions, setSessions] = useState<SessionItem[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
@@ -282,6 +285,31 @@ function CuratorContent() {
     }
   }
 
+  async function handleShare() {
+    const url = `${window.location.origin}/report?name=${encodeURIComponent(clientName)}&date=${encodeURIComponent(clientDate)}`
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
+  async function handleDownloadPDF() {
+    const el = document.getElementById('report-card')
+    if (!el) return
+    setPdfLoading(true)
+    try {
+      const { default: html2pdf } = await import('html2pdf.js')
+      await html2pdf().set({
+        margin: 0,
+        filename: `SOULSCENT_${clientName}_${clientDate}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      }).from(el).save()
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
   if (sessionLoading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.warmKhaki, background: V.creamFog }}>
       正在讀取資料…
@@ -306,11 +334,14 @@ function CuratorContent() {
           <span style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki }}>
             T1 · 香遇報告 · 策展師工作台
           </span>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button onClick={() => window.print()} disabled={!sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 18px', cursor: sessionLoaded ? 'pointer' : 'not-allowed', opacity: sessionLoaded ? 1 : 0.4 }}>
-              列印 / PDF
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button onClick={handleShare} disabled={!sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 14px', cursor: sessionLoaded ? 'pointer' : 'not-allowed', opacity: sessionLoaded ? 1 : 0.4, transition: 'opacity .2s' }}>
+              {copied ? '✓ 已複製' : '分享連結'}
             </button>
-            <button onClick={handleGenerate} disabled={generating || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 18px', cursor: (generating || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (generating || !sessionLoaded) ? 0.5 : 1, transition: 'opacity .2s' }}>
+            <button onClick={handleDownloadPDF} disabled={pdfLoading || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 14px', cursor: (pdfLoading || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (pdfLoading || !sessionLoaded) ? 0.4 : 1, transition: 'opacity .2s' }}>
+              {pdfLoading ? '輸出中…' : '下載 PDF'}
+            </button>
+            <button onClick={handleGenerate} disabled={generating || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 14px', cursor: (generating || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (generating || !sessionLoaded) ? 0.5 : 1, transition: 'opacity .2s' }}>
               {generating ? '生成中…' : '✦ 生成策展筆記'}
             </button>
           </div>
@@ -366,14 +397,14 @@ function CuratorContent() {
       )}
 
       {/* ── Report Card ── */}
-      {sessionLoaded && <div style={{ width: '794px', maxWidth: '100%', background: V.pureMist, position: 'relative', boxShadow: '0 4px 40px rgba(71,54,24,0.10)' }}>
+      {sessionLoaded && <div id="report-card" style={{ width: '794px', maxWidth: '100%', background: V.pureMist, position: 'relative', boxShadow: '0 4px 40px rgba(71,54,24,0.10)' }}>
 
         {/* Accent bar */}
         <div style={{ height: '3px', background: 'linear-gradient(to right,#9fa38a,#bfb792,transparent)' }} />
 
         {/* ── Header ── */}
-        <div style={{ background: V.creamFog, backgroundImage: bodyGrad, minHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 40px 24px', gap: '20px' }}>
-          <div>
+        <div className="report-header" style={{ background: V.creamFog, backgroundImage: bodyGrad, minHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 40px 24px', gap: '20px' }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.35em', textTransform: 'uppercase', color: V.sageHaze, marginBottom: '10px' }}>
               T1 · 香遇 · Scent Encounter Report
             </div>
@@ -384,7 +415,7 @@ function CuratorContent() {
               Your First Scent Portrait
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/uploads/Logo_black.png" alt="SOULSCENT" style={{ height: '48px', width: 'auto', opacity: 0.75, mixBlendMode: 'multiply', display: 'block', marginLeft: 'auto', marginBottom: '4px' }} />
             <div style={{ fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.mistSage }}>Scent Curation</div>
@@ -567,6 +598,9 @@ function CuratorContent() {
         }
         @media (max-width: 640px) {
           .body-grid { grid-template-columns: 1fr !important; }
+          .report-header { flex-direction: column !important; align-items: flex-start !important; }
+          .report-header > div:last-child { align-self: flex-start !important; }
+          .report-header > div:last-child img { margin-left: 0 !important; }
         }
       `}</style>
     </div>
