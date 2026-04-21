@@ -38,7 +38,10 @@ export async function POST(req: NextRequest) {
   })
 
   if (!res.ok) {
-    return NextResponse.json({ error: '生成失敗' }, { status: 500 })
+    const errData = await res.json().catch(() => ({}))
+    const errMsg = errData?.error?.message || errData?.error || JSON.stringify(errData)
+    console.error('[generate-curator-note] Claude API error:', res.status, errMsg)
+    return NextResponse.json({ error: `Claude API 錯誤 (${res.status}): ${errMsg}` }, { status: 500 })
   }
 
   const data = await res.json()

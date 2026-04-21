@@ -241,6 +241,7 @@ function CuratorContent() {
 
   async function handleGenerate() {
     setGenerating(true)
+    setError('')
     try {
       const obsText = [
         obs.standoutOil ? `最有感覺的精油：${obs.standoutOil}` : '',
@@ -260,10 +261,22 @@ function CuratorContent() {
           curatorObs,
         }),
       })
+
       const note = await res.json()
+
+      if (!res.ok || note.error) {
+        const msg = typeof note.error === 'string' ? note.error : JSON.stringify(note)
+        throw new Error(`生成失敗：${msg}`)
+      }
+      if (!note.note && !note.quote) {
+        throw new Error('AI 回傳內容為空，請再試一次')
+      }
+
       setCuratorNote(note.note || '')
       setCuratorQuote(note.quote || '')
       setGenerated(true)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '生成策展筆記時發生錯誤，請再試一次')
     } finally {
       setGenerating(false)
     }
