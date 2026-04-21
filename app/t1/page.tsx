@@ -469,20 +469,80 @@ export default function T1Page() {
 
             {status === 'success' && (
               <span style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '11px', padding: '8px 14px', background: '#e8f0e8', color: '#2d5a2d', border: '0.5px solid #6a9f6a', borderRadius: '2px' }}>
-                ✓ 已送出！
-              </span>
-            )}
-            {status === 'error' && (
-              <span style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '11px', padding: '8px 14px', background: '#f0e8e8', color: '#5a2d2d', border: '0.5px solid #9f6a6a', borderRadius: '2px' }}>
-                送出失敗，請再試一次。
-              </span>
-            )}
-            {status === 'network-error' && (
-              <span style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '11px', padding: '8px 14px', background: '#f0e8e8', color: '#5a2d2d', border: '0.5px solid #9f6a6a', borderRadius: '2px' }}>
-                連線失敗，請確認網路後重試。
+                ✓ 已送出！感謝你今天的到來，策展師將在 24 小時內回應你的紀錄。
               </span>
             )}
           </div>
+
+          {status === 'success' && (() => {
+            const reportUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/report?name=${encodeURIComponent(name.trim())}&date=${encodeURIComponent(date)}`
+            return (
+              <div style={{ marginTop: '20px', padding: '16px', border: '0.5px solid var(--t1)', background: 'rgba(159,163,138,.06)' }}>
+                <div style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--t1)', marginBottom: '8px' }}>
+                  香遇報告連結 · 可傳給客戶
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <code style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--umber)', background: 'rgba(191,183,146,.15)', padding: '5px 8px', flex: 1, wordBreak: 'break-all' }}>
+                    {reportUrl}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(reportUrl)
+                        .then(() => alert('✓ 已複製連結'))
+                        .catch(() => alert('請手動複製上方連結'))
+                    }}
+                    style={{
+                      background: 'var(--t1)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '7px 14px',
+                      fontFamily: 'var(--font-dm-sans), var(--font-ui)',
+                      fontSize: '9px',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    複製連結
+                  </button>
+                  <a
+                    href={reportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      border: '0.5px solid var(--khaki)',
+                      color: 'var(--khaki)',
+                      padding: '6px 14px',
+                      fontFamily: 'var(--font-dm-sans), var(--font-ui)',
+                      fontSize: '9px',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    預覽 →
+                  </a>
+                </div>
+              </div>
+            )
+          })()}
+
+          {status === 'error' && (
+            <div style={{ marginTop: '12px' }}>
+              <span style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '11px', padding: '8px 14px', background: '#f0e8e8', color: '#5a2d2d', border: '0.5px solid #9f6a6a', borderRadius: '2px' }}>
+                送出失敗，請再試一次。
+              </span>
+            </div>
+          )}
+          {status === 'network-error' && (
+            <div style={{ marginTop: '12px' }}>
+              <span style={{ fontFamily: 'var(--font-dm-sans), var(--font-ui)', fontSize: '11px', padding: '8px 14px', background: '#f0e8e8', color: '#5a2d2d', border: '0.5px solid #9f6a6a', borderRadius: '2px' }}>
+                連線失敗，請確認網路後重試。
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
