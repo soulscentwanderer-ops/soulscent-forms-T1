@@ -443,7 +443,7 @@ function CuratorContent() {
           <table style={{ width: '100%', borderCollapse: 'collapse', border: `0.5px solid ${V.mistSage}`, background: 'white' }}>
             <thead>
               <tr>
-                {['精油名稱', '濃度', '身體感受', '情緒感受'].map(h => (
+                {['精油名稱', '滴數', '身體感受', '情緒感受'].map(h => (
                   <th key={h} style={{ fontFamily: V.fontUi, fontSize: '8.5px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki, padding: '10px 14px', textAlign: 'left', borderBottom: `0.5px solid ${V.mistSage}`, background: 'rgba(169,179,168,0.08)', fontWeight: 400 }}>{h}</th>
                 ))}
               </tr>
@@ -455,7 +455,7 @@ function CuratorContent() {
                     <span style={{ fontFamily: V.fontDisplay, fontStyle: 'italic', fontSize: '13px', color: V.darkUmber }}>{oil.name}</span>
                   </td>
                   <td style={{ padding: '10px 14px', verticalAlign: 'top' }}>
-                    {oil.conc && <span style={{ display: 'inline-block', fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.1em', color: V.sageHaze, background: 'rgba(159,163,138,0.12)', padding: '2px 7px', borderRadius: '1px' }}>{oil.conc}%</span>}
+                    {oil.conc && <span style={{ display: 'inline-block', fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.1em', color: V.sageHaze, background: 'rgba(159,163,138,0.12)', padding: '2px 7px', borderRadius: '1px' }}>{oil.conc} 滴</span>}
                   </td>
                   <td style={{ padding: '10px 14px', verticalAlign: 'top' }}>
                     <AutoTextarea value={oil.body} onChange={v => setOils(p => p.map((r, ri) => ri === i ? { ...r, body: v } : r))} style={{ fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, lineHeight: '1.6' }} />
