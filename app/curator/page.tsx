@@ -33,7 +33,7 @@ function parseOils(text: string): OilRow[] {
     const namePart = parts[0] || ''
     const body = parts.find(s => s.startsWith('身體：'))?.slice(3) || ''
     const emotion = parts.find(s => s.startsWith('情緒：'))?.slice(3) || ''
-    const concMatch = namePart.match(/\s+(\d+\.?\d*)%$/)
+    const concMatch = namePart.match(/\s+(\d+\.?\d*)[滴%]$/)
     const name = concMatch ? namePart.slice(0, concMatch.index).trim() : namePart.trim()
     const conc = concMatch ? concMatch[1] : ''
     return { name, conc, body, emotion }

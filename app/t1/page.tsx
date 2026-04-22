@@ -91,7 +91,7 @@ export default function T1Page() {
       .filter(r => r.name.trim())
       .map(r => {
         let s = r.name.trim()
-        if (r.conc.trim()) s += ' ' + r.conc.trim() + '%'
+        if (r.conc.trim()) s += ' ' + r.conc.trim() + '滴'
         if (r.body.trim()) s += ' | 身體：' + r.body.trim()
         if (r.emotion.trim()) s += ' | 情緒：' + r.emotion.trim()
         return s
