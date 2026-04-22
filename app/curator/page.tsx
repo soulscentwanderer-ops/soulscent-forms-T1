@@ -488,9 +488,12 @@ function CuratorContent() {
                   <span style={{ flex: 1, height: '0.5px', background: 'rgba(191,183,146,0.3)', display: 'block' }} />
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {tags.map((t, i) => (
-                    <span key={t.label} onClick={() => toggle(i)} style={tagStyle(t.active)}>{t.label}</span>
-                  ))}
+                  {tags.filter(t => t.active).length > 0
+                    ? tags.filter(t => t.active).map((t, i) => (
+                        <span key={t.label} onClick={() => toggle(tags.indexOf(t))} style={tagStyle(true)}>{t.label}</span>
+                      ))
+                    : <span style={{ fontFamily: V.fontUi, fontSize: '11px', color: V.mistSage, fontStyle: 'italic' }}>（未選擇）</span>
+                  }
                 </div>
               </div>
             ))}
