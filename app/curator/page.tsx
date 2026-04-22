@@ -423,14 +423,14 @@ function CuratorContent() {
         </div>
 
         {/* Client row */}
-        <div style={{ borderTop: '0.5px solid rgba(191,183,146,0.4)', padding: '10px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>客戶姓名 ／</span>
-            <AutoTextarea value={clientName} onChange={setClientName} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, width: 'auto', minWidth: '80px' }} />
+        <div style={{ borderTop: '0.5px solid rgba(191,183,146,0.4)', padding: '10px 40px', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+          <div style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ whiteSpace: 'nowrap' }}>客戶姓名 ／</span>
+            <AutoTextarea value={clientName} onChange={setClientName} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold }} />
           </div>
-          <div style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>諮詢日期 ／</span>
-            <AutoTextarea value={clientDate} onChange={setClientDate} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, width: 'auto', minWidth: '100px' }} />
+          <div style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ whiteSpace: 'nowrap' }}>諮詢日期 ／</span>
+            <AutoTextarea value={clientDate} onChange={setClientDate} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold }} />
           </div>
         </div>
 
