@@ -66,8 +66,12 @@ export async function GET(req: NextRequest) {
         after: getText('結束後狀態'),
         oils: getText('最終配方說明'),
         observation: getText('喚起的記憶或故事'),
-        curatorNote: getText('氣味策展筆記'),
-        curatorQuote: getText('策展引言'),
+        ...(() => {
+          const raw = getText('肖像摘要')
+          if (!raw) return { curatorNote: '', curatorQuote: '' }
+          const parts = raw.split('\n---\n')
+          return { curatorNote: parts[0] || '', curatorQuote: parts[1] || '' }
+        })(),
       })
     }
 
