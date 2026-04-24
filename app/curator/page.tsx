@@ -307,43 +307,64 @@ function CuratorContent() {
     if (!el) return
     setPdfLoading(true)
 
-    // Collect all textareas and replace in-place with divs
-    // (html2canvas cannot capture textarea.value)
-    const replacements: Array<{ ta: HTMLTextAreaElement; div: HTMLDivElement }> = []
-    el.querySelectorAll<HTMLTextAreaElement>('textarea').forEach(ta => {
-      const div = document.createElement('div')
-      div.textContent = ta.value
-      div.style.cssText = ta.style.cssText
-      div.style.whiteSpace = 'pre-wrap'
-      div.style.wordBreak = 'break-word'
-      div.style.width = '100%'
-      div.style.display = 'block'
-      ta.parentNode?.insertBefore(div, ta)
-      ta.style.display = 'none'
-      replacements.push({ ta, div })
+    // Capture textarea values BEFORE cloning (clone doesn't copy .value)
+    const taValues = new WeakMap<Element, string>()
+    el.querySelectorAll('textarea').forEach(ta => {
+      taValues.set(ta, ta.value)
     })
 
     try {
-      const { default: html2pdf } = await import('html2pdf.js')
-      await html2pdf().set({
-        margin: 0,
-        filename: `SOULSCENT_${clientName}_${clientDate}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          backgroundColor: '#f5f0eb',
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#f5f0eb',
+        logging: false,
+        windowWidth: el.scrollWidth,
+        onclone: (clonedDoc, clonedEl) => {
+          // Match cloned textareas to originals by DOM position, replace with divs
+          const origTAs = Array.from(el.querySelectorAll('textarea'))
+          const cloneTAs = Array.from(clonedEl.querySelectorAll('textarea'))
+          cloneTAs.forEach((cta, idx) => {
+            const orig = origTAs[idx]
+            const val = orig ? taValues.get(orig) || '' : ''
+            const div = clonedDoc.createElement('div')
+            div.textContent = val
+            div.setAttribute('style', cta.getAttribute('style') || '')
+            div.style.whiteSpace = 'pre-wrap'
+            div.style.wordBreak = 'break-word'
+            div.style.width = '100%'
+            div.style.display = 'block'
+            div.style.minHeight = '1em'
+            cta.parentNode?.replaceChild(div, cta)
+          })
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      }).from(el).save()
-    } finally {
-      // Restore all textareas
-      replacements.forEach(({ ta, div }) => {
-        ta.style.display = ''
-        div.parentNode?.removeChild(div)
       })
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width
+
+      let heightLeft = imgHeight
+      let position = 0
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight)
+      heightLeft -= pdfHeight
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight)
+        heightLeft -= pdfHeight
+      }
+      pdf.save(`SOULSCENT_${clientName}_${clientDate}.pdf`)
+    } catch (e) {
+      console.error('[handleDownloadPDF]', e)
+      setError(e instanceof Error ? `PDF 輸出失敗：${e.message}` : 'PDF 輸出失敗')
+    } finally {
       setPdfLoading(false)
     }
   }
