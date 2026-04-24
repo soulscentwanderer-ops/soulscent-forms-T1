@@ -150,6 +150,8 @@ function CuratorContent() {
 
   const [copied, setCopied] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   // Session list (picker)
   const [sessions, setSessions] = useState<SessionItem[]>([])
@@ -218,6 +220,11 @@ function CuratorContent() {
       setBeforeTags(buildTags(BEFORE_OPTIONS, session.before))
       setAfterTags(buildTags(AFTER_OPTIONS, session.after))
       setObs(parseObsText(session.observation))
+      if (session.curatorNote) {
+        setCuratorNote(session.curatorNote)
+        setCuratorQuote(session.curatorQuote || '')
+        setGenerated(true)
+      }
       setSessionLoaded(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '載入失敗')
@@ -310,6 +317,28 @@ function CuratorContent() {
     }
   }
 
+  async function handleSave() {
+    if (!curatorNote) return
+    setSaving(true)
+    setSaved(false)
+    setError('')
+    try {
+      const res = await fetch('/api/save-curator-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: clientName, date: clientDate, note: curatorNote, quote: curatorQuote }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '儲存失敗')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '儲存失敗')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (sessionLoading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.warmKhaki, background: V.creamFog }}>
       正在讀取資料…
@@ -344,6 +373,11 @@ function CuratorContent() {
             <button onClick={handleGenerate} disabled={generating || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 14px', cursor: (generating || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (generating || !sessionLoaded) ? 0.5 : 1, transition: 'opacity .2s' }}>
               {generating ? '生成中…' : '✦ 生成策展筆記'}
             </button>
+            {generated && (
+              <button onClick={handleSave} disabled={saving} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: saved ? '#4a7a4a' : V.darkUmber, background: saved ? 'rgba(74,122,74,0.1)' : 'rgba(191,183,146,0.2)', border: `0.5px solid ${saved ? '#6a9f6a' : V.sandGold}`, padding: '7px 14px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'all .2s' }}>
+                {saving ? '儲存中…' : saved ? '✓ 已儲存至 Notion' : '↑ 儲存策展筆記'}
+              </button>
+            )}
           </div>
         </div>
 

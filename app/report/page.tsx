@@ -10,6 +10,8 @@ interface SessionData {
   after: string
   oils: string
   observation: string
+  curatorNote?: string
+  curatorQuote?: string
 }
 
 interface OilItem {
@@ -34,7 +36,7 @@ function parseOils(text: string): OilItem[] {
       const namePart = segments[0] || ''
       const body = segments.find(s => s.startsWith('身體：'))?.slice(3) || ''
       const emotion = segments.find(s => s.startsWith('情緒：'))?.slice(3) || ''
-      const concMatch = namePart.match(/\s+(\d+\.?\d*)%$/)
+      const concMatch = namePart.match(/\s+(\d+\.?\d*)[滴%]$/)
       const name = concMatch ? namePart.slice(0, concMatch.index).trim() : namePart.trim()
       const conc = concMatch ? concMatch[1] : ''
       return { name, conc, body, emotion }
@@ -79,7 +81,6 @@ function ReportContent() {
   const [session, setSession] = useState<SessionData | null>(null)
   const [curatorNote, setCuratorNote] = useState<CuratorNote | null>(null)
   const [loading, setLoading] = useState(true)
-  const [noteLoading, setNoteLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -102,19 +103,9 @@ function ReportContent() {
         setSession(sessionData)
         setLoading(false)
 
-        setNoteLoading(true)
-        try {
-          const noteRes = await fetch('/api/generate-curator-note', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(sessionData),
-          })
-          if (noteRes.ok) {
-            const note = await noteRes.json()
-            setCuratorNote(note)
-          }
-        } finally {
-          setNoteLoading(false)
+        // Use saved curator note from Notion — do not regenerate
+        if (sessionData.curatorNote) {
+          setCuratorNote({ note: sessionData.curatorNote, quote: sessionData.curatorQuote || '' })
         }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : '讀取失敗')
@@ -252,7 +243,7 @@ function ReportContent() {
             {oils.length > 0 ? oils.map((oil, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 50px 2fr 2fr', gap: '8px', padding: '7px 0', borderBottom: '0.5px dashed rgba(168,179,168,.3)', alignItems: 'baseline' }}>
                 <span style={{ fontSize: '13px', color: 'var(--umber)' }}>{oil.name}</span>
-                <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '11px', color: 'var(--khaki)' }}>{oil.conc ? `${oil.conc}%` : '—'}</span>
+                <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '11px', color: 'var(--khaki)' }}>{oil.conc ? `${oil.conc} 滴` : '—'}</span>
                 <span style={{ fontSize: '12px', color: 'var(--khaki)', fontWeight: 300 }}>{oil.body || '—'}</span>
                 <span style={{ fontSize: '12px', color: 'var(--khaki)', fontWeight: 300 }}>{oil.emotion || '—'}</span>
               </div>
@@ -352,11 +343,7 @@ function ReportContent() {
             </div>
           </div>
 
-          {noteLoading ? (
-            <div style={{ padding: '20px 0', fontFamily: 'var(--font-dm-sans)', fontSize: '11px', letterSpacing: '0.1em', color: 'var(--sage)' }}>
-              策展師正在為你寫下觀察…
-            </div>
-          ) : curatorNote ? (
+          {curatorNote ? (
             <div>
               <div style={{
                 borderLeft: '2.5px solid var(--t1)',
@@ -394,8 +381,8 @@ function ReportContent() {
               )}
             </div>
           ) : (
-            <div style={{ padding: '20px 0', fontFamily: 'var(--font-dm-sans)', fontSize: '11px', color: 'var(--sage)' }}>
-              （策展筆記暫時無法生成）
+            <div style={{ padding: '20px 0', fontFamily: 'var(--font-dm-sans)', fontSize: '11px', color: 'var(--sage)', fontStyle: 'italic' }}>
+              策展筆記尚未發布，請稍候。
             </div>
           )}
         </div>

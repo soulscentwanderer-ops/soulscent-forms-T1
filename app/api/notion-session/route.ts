@@ -66,6 +66,8 @@ export async function GET(req: NextRequest) {
         after: getText('結束後狀態'),
         oils: getText('最終配方說明'),
         observation: getText('喚起的記憶或故事'),
+        curatorNote: getText('氣味策展筆記'),
+        curatorQuote: getText('策展引言'),
       })
     }
 
