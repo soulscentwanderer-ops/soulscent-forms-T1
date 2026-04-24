@@ -308,13 +308,35 @@ function CuratorContent() {
     setPdfLoading(true)
     try {
       const { default: html2pdf } = await import('html2pdf.js')
+
+      // Clone the element and replace all <textarea> with <div>
+      // because html2canvas cannot capture textarea values
+      const clone = el.cloneNode(true) as HTMLElement
+      clone.style.position = 'fixed'
+      clone.style.left = '-9999px'
+      clone.style.top = '0'
+      clone.style.width = el.offsetWidth + 'px'
+      document.body.appendChild(clone)
+
+      clone.querySelectorAll('textarea').forEach(ta => {
+        const div = document.createElement('div')
+        div.textContent = ta.value
+        div.style.cssText = ta.style.cssText
+        div.style.whiteSpace = 'pre-wrap'
+        div.style.wordBreak = 'break-word'
+        div.style.width = '100%'
+        ta.parentNode?.replaceChild(div, ta)
+      })
+
       await html2pdf().set({
         margin: 0,
         filename: `SOULSCENT_${clientName}_${clientDate}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, allowTaint: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      }).from(el).save()
+      }).from(clone).save()
+
+      document.body.removeChild(clone)
     } finally {
       setPdfLoading(false)
     }
