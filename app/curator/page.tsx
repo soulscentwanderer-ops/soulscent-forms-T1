@@ -55,12 +55,13 @@ function buildTags(options: string[], notionStr: string): TagItem[] {
 
 // ─── AutoTextarea ─────────────────────────────────────────────────────────────
 function AutoTextarea({
-  value, onChange, style, placeholder,
+  value, onChange, style, placeholder, readOnly,
 }: {
   value: string
   onChange: (v: string) => void
   style?: React.CSSProperties
   placeholder?: string
+  readOnly?: boolean
 }) {
   const ref = useRef<HTMLTextAreaElement>(null)
   useEffect(() => {
@@ -73,7 +74,8 @@ function AutoTextarea({
     <textarea
       ref={ref}
       value={value}
-      onChange={e => onChange(e.target.value)}
+      onChange={readOnly ? () => {} : e => onChange(e.target.value)}
+      readOnly={readOnly}
       placeholder={placeholder}
       rows={1}
       style={{
@@ -81,7 +83,7 @@ function AutoTextarea({
         background: 'transparent', width: '100%', display: 'block',
         fontFamily: 'inherit', fontSize: 'inherit', color: 'inherit',
         lineHeight: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit',
-        padding: 0, margin: 0, ...style,
+        padding: 0, margin: 0, cursor: readOnly ? 'default' : 'text', ...style,
       }}
     />
   )
@@ -147,6 +149,7 @@ function CuratorContent() {
   const searchParams = useSearchParams()
   const urlName = searchParams.get('name') || ''
   const urlDate = searchParams.get('date') || ''
+  const isView = searchParams.get('view') === '1'
 
   const [copied, setCopied] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
@@ -293,7 +296,7 @@ function CuratorContent() {
   }
 
   async function handleShare() {
-    const url = `${window.location.origin}/report?name=${encodeURIComponent(clientName)}&date=${encodeURIComponent(clientDate)}`
+    const url = `${window.location.origin}/curator?view=1&name=${encodeURIComponent(clientName)}&date=${encodeURIComponent(clientDate)}`
     await navigator.clipboard.writeText(url)
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
@@ -358,10 +361,9 @@ function CuratorContent() {
 
       {/* ── Toolbar ── */}
       <div className="no-print" style={{ width: '794px', maxWidth: '100%', marginBottom: '16px', padding: '0 2px' }}>
-        {/* Top row: label + actions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isView ? 0 : '10px' }}>
           <span style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki }}>
-            T1 · 香遇報告 · 策展師工作台
+            {isView ? 'T1 · 香遇報告' : 'T1 · 香遇報告 · 策展師工作台'}
           </span>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={handleShare} disabled={!sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 14px', cursor: sessionLoaded ? 'pointer' : 'not-allowed', opacity: sessionLoaded ? 1 : 0.4, transition: 'opacity .2s' }}>
@@ -370,41 +372,47 @@ function CuratorContent() {
             <button onClick={handleDownloadPDF} disabled={pdfLoading || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.darkUmber, background: 'transparent', border: `0.5px solid ${V.sandGold}`, padding: '7px 14px', cursor: (pdfLoading || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (pdfLoading || !sessionLoaded) ? 0.4 : 1, transition: 'opacity .2s' }}>
               {pdfLoading ? '輸出中…' : '下載 PDF'}
             </button>
-            <button onClick={handleGenerate} disabled={generating || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 14px', cursor: (generating || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (generating || !sessionLoaded) ? 0.5 : 1, transition: 'opacity .2s' }}>
-              {generating ? '生成中…' : '✦ 生成策展筆記'}
-            </button>
-            {generated && (
-              <button onClick={handleSave} disabled={saving} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: saved ? '#4a7a4a' : V.darkUmber, background: saved ? 'rgba(74,122,74,0.1)' : 'rgba(191,183,146,0.2)', border: `0.5px solid ${saved ? '#6a9f6a' : V.sandGold}`, padding: '7px 14px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'all .2s' }}>
-                {saving ? '儲存中…' : saved ? '✓ 已儲存至 Notion' : '↑ 儲存策展筆記'}
-              </button>
+            {!isView && (
+              <>
+                <button onClick={handleGenerate} disabled={generating || !sessionLoaded} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: V.pureMist, background: V.darkUmber, border: 'none', padding: '7px 14px', cursor: (generating || !sessionLoaded) ? 'not-allowed' : 'pointer', opacity: (generating || !sessionLoaded) ? 0.5 : 1, transition: 'opacity .2s' }}>
+                  {generating ? '生成中…' : '✦ 生成策展筆記'}
+                </button>
+                {generated && (
+                  <button onClick={handleSave} disabled={saving} style={{ fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: saved ? '#4a7a4a' : V.darkUmber, background: saved ? 'rgba(74,122,74,0.1)' : 'rgba(191,183,146,0.2)', border: `0.5px solid ${saved ? '#6a9f6a' : V.sandGold}`, padding: '7px 14px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'all .2s' }}>
+                    {saving ? '儲存中…' : saved ? '✓ 已儲存至 Notion' : '↑ 儲存策展筆記'}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
 
-        {/* Session picker row */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase', color: V.mistSage, whiteSpace: 'nowrap' }}>
-            選擇諮詢
-          </span>
-          <select
-            value={selectedKey}
-            onChange={e => handlePickerChange(e.target.value)}
-            style={{ flex: 1, fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, background: 'rgba(255,255,255,0.7)', border: `0.5px solid rgba(191,183,146,0.6)`, padding: '7px 10px', outline: 'none', cursor: 'pointer', appearance: 'auto' }}
-          >
-            <option value="">
-              {sessionsLoading ? '讀取中…' : sessions.length === 0 ? '（尚無紀錄）' : '請選擇一筆諮詢紀錄'}
-            </option>
-            {sessions.map(s => (
-              <option key={`${s.name}__${s.date}`} value={`${s.name}__${s.date}`}>
-                {s.date}　{s.name}
+        {/* Session picker — only in curator mode */}
+        {!isView && (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase', color: V.mistSage, whiteSpace: 'nowrap' }}>
+              選擇諮詢
+            </span>
+            <select
+              value={selectedKey}
+              onChange={e => handlePickerChange(e.target.value)}
+              style={{ flex: 1, fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, background: 'rgba(255,255,255,0.7)', border: `0.5px solid rgba(191,183,146,0.6)`, padding: '7px 10px', outline: 'none', cursor: 'pointer', appearance: 'auto' }}
+            >
+              <option value="">
+                {sessionsLoading ? '讀取中…' : sessions.length === 0 ? '（尚無紀錄）' : '請選擇一筆諮詢紀錄'}
               </option>
-            ))}
-          </select>
-        </div>
+              {sessions.map(s => (
+                <option key={`${s.name}__${s.date}`} value={`${s.name}__${s.date}`}>
+                  {s.date}　{s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* ── Curator Obs Input (no-print) ── */}
-      {sessionLoaded && (
+      {/* ── Curator Obs Input (no-print, hidden in view mode) ── */}
+      {sessionLoaded && !isView && (
         <div className="no-print" style={{ width: '794px', maxWidth: '100%', marginBottom: '12px', padding: '14px 16px', background: 'rgba(71,54,24,0.05)', border: `0.5px solid rgba(191,183,146,0.4)` }}>
           <div style={{ fontFamily: V.fontUi, fontSize: '8px', letterSpacing: '0.3em', textTransform: 'uppercase', color: V.warmKhaki, marginBottom: '6px' }}>策展師私人觀察（生成策展筆記時參考，不印出）</div>
           <AutoTextarea
@@ -460,11 +468,11 @@ function CuratorContent() {
         <div style={{ borderTop: '0.5px solid rgba(191,183,146,0.4)', padding: '10px 40px', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           <div style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, display: 'flex', alignItems: 'baseline', gap: '4px' }}>
             <span style={{ whiteSpace: 'nowrap' }}>客戶姓名 ／</span>
-            <AutoTextarea value={clientName} onChange={setClientName} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold }} />
+            <AutoTextarea value={clientName} onChange={setClientName} readOnly={isView} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold }} />
           </div>
           <div style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold, display: 'flex', alignItems: 'baseline', gap: '4px' }}>
             <span style={{ whiteSpace: 'nowrap' }}>諮詢日期 ／</span>
-            <AutoTextarea value={clientDate} onChange={setClientDate} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold }} />
+            <AutoTextarea value={clientDate} onChange={setClientDate} readOnly={isView} style={{ fontFamily: V.fontUi, fontSize: '11px', letterSpacing: '0.2em', color: V.sandGold }} />
           </div>
         </div>
 
@@ -492,10 +500,10 @@ function CuratorContent() {
                     {oil.conc && <span style={{ display: 'inline-block', fontFamily: V.fontUi, fontSize: '9px', letterSpacing: '0.1em', color: V.sageHaze, background: 'rgba(159,163,138,0.12)', padding: '2px 7px', borderRadius: '1px' }}>{oil.conc} 滴</span>}
                   </td>
                   <td style={{ padding: '10px 14px', verticalAlign: 'top' }}>
-                    <AutoTextarea value={oil.body} onChange={v => setOils(p => p.map((r, ri) => ri === i ? { ...r, body: v } : r))} style={{ fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, lineHeight: '1.6' }} />
+                    <AutoTextarea value={oil.body} onChange={v => setOils(p => p.map((r, ri) => ri === i ? { ...r, body: v } : r))} readOnly={isView} style={{ fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, lineHeight: '1.6' }} />
                   </td>
                   <td style={{ padding: '10px 14px', verticalAlign: 'top' }}>
-                    <AutoTextarea value={oil.emotion} onChange={v => setOils(p => p.map((r, ri) => ri === i ? { ...r, emotion: v } : r))} style={{ fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, lineHeight: '1.6' }} />
+                    <AutoTextarea value={oil.emotion} onChange={v => setOils(p => p.map((r, ri) => ri === i ? { ...r, emotion: v } : r))} readOnly={isView} style={{ fontFamily: V.fontZh, fontSize: '12px', color: V.darkUmber, lineHeight: '1.6' }} />
                   </td>
                 </tr>
               )) : (
@@ -523,8 +531,8 @@ function CuratorContent() {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {tags.filter(t => t.active).length > 0
-                    ? tags.filter(t => t.active).map((t, i) => (
-                        <span key={t.label} onClick={() => toggle(tags.indexOf(t))} style={tagStyle(true)}>{t.label}</span>
+                    ? tags.filter(t => t.active).map((t) => (
+                        <span key={t.label} onClick={isView ? undefined : () => toggle(tags.indexOf(t))} style={{ ...tagStyle(true), cursor: isView ? 'default' : 'pointer' }}>{t.label}</span>
                       ))
                     : <span style={{ fontFamily: V.fontUi, fontSize: '11px', color: V.mistSage, fontStyle: 'italic' }}>（未選擇）</span>
                   }
@@ -551,6 +559,7 @@ function CuratorContent() {
                 <AutoTextarea
                   value={obs[key]}
                   onChange={v => setObs(p => ({ ...p, [key]: v }))}
+                  readOnly={isView}
                   placeholder="（點擊編輯）"
                   style={{ fontFamily: V.fontZh, fontSize: '13px', color: V.darkUmber, lineHeight: '1.8', fontWeight: 300 }}
                 />
@@ -576,6 +585,7 @@ function CuratorContent() {
                   <AutoTextarea
                     value={step.text}
                     onChange={v => setRituals(p => p.map((r, ri) => ri === i ? { ...r, text: v } : r))}
+                    readOnly={isView}
                     style={{ fontFamily: V.fontZh, fontSize: '12.5px', color: V.darkUmber, lineHeight: '1.7', fontWeight: 300 }}
                   />
                 </div>
@@ -592,22 +602,26 @@ function CuratorContent() {
           {!generated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontFamily: V.fontUi, fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(191,183,146,0.6)' }}>
               <DotPulse />
-              {generating ? '正在為這位客戶生成專屬策展筆記…' : '點擊上方「生成策展筆記」，為這位客戶生成專屬內容'}
+              {generating ? '正在為這位客戶生成專屬策展筆記…' : isView ? '策展筆記尚未發布' : '點擊上方「生成策展筆記」，為這位客戶生成專屬內容'}
             </div>
           ) : (
             <>
               <AutoTextarea
                 value={curatorNote}
                 onChange={setCuratorNote}
+                readOnly={isView}
                 style={{ fontFamily: '"SweiSpring", "Noto Serif TC", serif', fontSize: '15px', color: '#e8e0d4', lineHeight: '2.2', marginBottom: '28px' }}
               />
-              <div style={{ borderLeft: `2px solid ${V.sandGold}`, padding: '10px 20px' }}>
-                <AutoTextarea
-                  value={`「${curatorQuote}」`}
-                  onChange={v => setCuratorQuote(v.replace(/^「|」$/g, ''))}
-                  style={{ fontFamily: '"SweiSpring", "Noto Serif TC", serif', fontSize: '19px', color: '#f0e8d8', lineHeight: '1.8' }}
-                />
-              </div>
+              {curatorQuote && (
+                <div style={{ borderLeft: `2px solid ${V.sandGold}`, padding: '10px 20px' }}>
+                  <AutoTextarea
+                    value={`「${curatorQuote}」`}
+                    onChange={v => setCuratorQuote(v.replace(/^「|」$/g, ''))}
+                    readOnly={isView}
+                    style={{ fontFamily: '"SweiSpring", "Noto Serif TC", serif', fontSize: '19px', color: '#f0e8d8', lineHeight: '1.8' }}
+                  />
+                </div>
+              )}
             </>
           )}
         </div>
