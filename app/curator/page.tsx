@@ -306,38 +306,44 @@ function CuratorContent() {
     const el = document.getElementById('report-card')
     if (!el) return
     setPdfLoading(true)
+
+    // Collect all textareas and replace in-place with divs
+    // (html2canvas cannot capture textarea.value)
+    const replacements: Array<{ ta: HTMLTextAreaElement; div: HTMLDivElement }> = []
+    el.querySelectorAll<HTMLTextAreaElement>('textarea').forEach(ta => {
+      const div = document.createElement('div')
+      div.textContent = ta.value
+      div.style.cssText = ta.style.cssText
+      div.style.whiteSpace = 'pre-wrap'
+      div.style.wordBreak = 'break-word'
+      div.style.width = '100%'
+      div.style.display = 'block'
+      ta.parentNode?.insertBefore(div, ta)
+      ta.style.display = 'none'
+      replacements.push({ ta, div })
+    })
+
     try {
       const { default: html2pdf } = await import('html2pdf.js')
-
-      // Clone the element and replace all <textarea> with <div>
-      // because html2canvas cannot capture textarea values
-      const clone = el.cloneNode(true) as HTMLElement
-      clone.style.position = 'fixed'
-      clone.style.left = '-9999px'
-      clone.style.top = '0'
-      clone.style.width = el.offsetWidth + 'px'
-      document.body.appendChild(clone)
-
-      clone.querySelectorAll('textarea').forEach(ta => {
-        const div = document.createElement('div')
-        div.textContent = ta.value
-        div.style.cssText = ta.style.cssText
-        div.style.whiteSpace = 'pre-wrap'
-        div.style.wordBreak = 'break-word'
-        div.style.width = '100%'
-        ta.parentNode?.replaceChild(div, ta)
-      })
-
       await html2pdf().set({
         margin: 0,
         filename: `SOULSCENT_${clientName}_${clientDate}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#f5f0eb',
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      }).from(clone).save()
-
-      document.body.removeChild(clone)
+      }).from(el).save()
     } finally {
+      // Restore all textareas
+      replacements.forEach(({ ta, div }) => {
+        ta.style.display = ''
+        div.parentNode?.removeChild(div)
+      })
       setPdfLoading(false)
     }
   }
